@@ -341,7 +341,7 @@ class SeparableConv2d(nn.Module):
 
 class FPN(nn.Module):
      
-  def __init__(self, blocks,blocks_args=None, global_params=None):
+  def __init__(self, blocks,blocks_args=None, global_params=None, out_channels = 256):
     super().__init__()
 
     assert isinstance(blocks_args, list), 'blocks_args should be a list'
@@ -409,6 +409,8 @@ class FPN(nn.Module):
 
     #additional layer
     self.additional_down = nn.MaxPool2d(2, stride=2)
+
+    self.out_channels = out_channels
     
   def forward(self, x):
 
@@ -461,12 +463,12 @@ class FPN(nn.Module):
       return od
 
 def TwoWayFPNBackbone():
-
+    out_channels = 256
     override_params={'num_classes': 1000}
     paras = get_model_params( 'efficientnet-b5', override_params )
 
     model = EfficientNet(paras[0],paras[1])
     arr = model.return_sub()
 
-    fpn = FPN( arr, paras[0], paras[1] )
+    fpn = FPN( arr, paras[0], paras[1], out_channels=out_channels )
     return fpn
