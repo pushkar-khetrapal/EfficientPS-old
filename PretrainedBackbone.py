@@ -6,8 +6,8 @@ from efficientnet_pytorch import utils
 import collections
 import re
 from efficientnet_pytorch import EfficientNet
-
 from torch.nn import functional as F
+from collections import OrderedDict
 
 from efficientnet_pytorch.utils import (
     round_filters,
@@ -386,5 +386,3 @@ def TwoWayFPNBackbone(preTrained = True):
     # Feature Pyramid Networks  
     fpn = FPN( passing_arr, paras[0], paras[1], out_channels=out_channels )
     return fpn
-
-
