@@ -21,7 +21,6 @@ from efficientnet_pytorch.utils import (
     MemoryEfficientSwish,
 )
 
-
 ########################################################################################################
 # Setting the parameters of efficientNet-B05
 
