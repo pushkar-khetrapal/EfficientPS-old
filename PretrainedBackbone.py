@@ -341,29 +341,39 @@ class FPN(nn.Module):
         
       return od
 
-def TwoWayFPNBackbone():
+def TwoWayFPNBackbone(preTrained = True):
+
+    ## output channels for each size is = 256
     out_channels = 256
+
+    ## getting the parameters for efficient-b5
     override_params={'num_classes': 1000}
     paras = get_model_params( 'efficientnet-b5', override_params )
 
+    # getting the pretrained model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
     net = get_net().to(device)
 
+    # Replacing the BatchNorm with InPlaceABN Sync layers
     model = convert_layers(net, nn.BatchNorm2d, InPlaceABN, True)
-    final_block = list(model._blocks)
+    # getting the blocks only from full model since we are setting initial and final layers by ourselfs
+    final_block = list(model._blocks)  
+    # the first loop iterate over each MBConv block and second loop iterate over each element
     final_arr = []
     for block in range(len(final_block)):
-  	temp = []
-  	i = -1
-  	lis = list(final_block[block].children())
-  	for idx, m in final_block[block].named_children():
-    		i = i + 1
-    	if idx in ['_se_reduce', '_se_expand', '_swish']:
-      		continue
-    	else:
-      		temp.append(lis[i])
-  	final_arr.append(nn.Sequential(*temp))
+        temp = []
+        i = -1
+        lis = list(final_block[block].children()) # getting the childrens each MBConv block
+        # loop over names since we need to remove ['_se_reduce', '_se_expand', '_swish'] layers
+        for idx, m in final_block[block].named_children():
+            i = i + 1
+            if idx in ['_se_reduce', '_se_expand', '_swish']:
+                continue
+            else:
+                temp.append(lis[i])
+        final_arr.append(nn.Sequential(*temp))
 
+    # the efficientNet-B5 is divided into 7 big blocks 
     passing_arr = []
     passing_arr.append(nn.Sequential(*final_arr[0:3]))
     passing_arr.append(nn.Sequential(*final_arr[3:8]))
@@ -373,7 +383,7 @@ def TwoWayFPNBackbone():
     passing_arr.append(nn.Sequential(*final_arr[27:36]))
     passing_arr.append(nn.Sequential(*final_arr[36:]))
 
-
+    # Feature Pyramid Networks  
     fpn = FPN( passing_arr, paras[0], paras[1], out_channels=out_channels )
     return fpn
 
