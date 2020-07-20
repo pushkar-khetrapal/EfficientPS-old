@@ -1,4 +1,8 @@
-def auto_download(self, dataDir, dataType, dataYear):
+import os
+import urllib
+import shutil
+import zipfile
+def auto_download(dataDir, dataType, dataYear):
     """Download the COCO dataset/annotations if requested.
     dataDir: The root directory of the COCO dataset.
     dataType: What to load (train, val, minival, valminusminival)
