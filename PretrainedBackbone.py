@@ -190,7 +190,7 @@ def convert_layers(model, layer_type_old, layer_type_new, convert_weights=False)
 
         if type(module) == layer_type_old:
             layer_old = module
-            layer_new = layer_type_new(module.num_features) 
+            layer_new = layer_type_new(module.num_features, activation='identity') 
 
             if convert_weights:
                 layer_new.weight = layer_old.weight
@@ -359,19 +359,23 @@ def TwoWayFPNBackbone(preTrained = True):
     # getting the blocks only from full model since we are setting initial and final layers by ourselfs
     final_block = list(model._blocks)  
     # the first loop iterate over each MBConv block and second loop iterate over each element
+
+
     final_arr = []
     for block in range(len(final_block)):
-        temp = []
-        i = -1
-        lis = list(final_block[block].children()) # getting the childrens each MBConv block
-        # loop over names since we need to remove ['_se_reduce', '_se_expand', '_swish'] layers
-        for idx, m in final_block[block].named_children():
-            i = i + 1
-            if idx in ['_se_reduce', '_se_expand', '_swish']:
-                continue
-            else:
-                temp.append(lis[i])
-        final_arr.append(nn.Sequential(*temp))
+    temp = []
+    i = -1
+    lis = list(final_block[block].children())
+    for idx, m in final_block[block].named_children():
+        i = i + 1
+        if idx in ['_se_reduce', '_se_expand']:
+        continue
+        else:
+        if idx in ['_bn0', '_bn1', '_bn2']:
+            for param in lis[i].parameters():
+            param.requires_grad = False
+        temp.append(lis[i])
+    final_arr.append(nn.Sequential(*temp))
 
     # the efficientNet-B5 is divided into 7 big blocks 
     passing_arr = []
@@ -383,6 +387,5 @@ def TwoWayFPNBackbone(preTrained = True):
     passing_arr.append(nn.Sequential(*final_arr[27:36]))
     passing_arr.append(nn.Sequential(*final_arr[36:]))
 
-    # Feature Pyramid Networks  
-    fpn = FPN( passing_arr, paras[0], paras[1], out_channels=out_channels )
-    return fpn
+    # Feature Pyramid Networks
+    return FPN( passing_arr, paras[0], paras[1], out_channels=out_channels )
