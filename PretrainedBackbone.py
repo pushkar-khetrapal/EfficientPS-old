@@ -363,19 +363,19 @@ def TwoWayFPNBackbone(preTrained = True):
 
     final_arr = []
     for block in range(len(final_block)):
-    temp = []
-    i = -1
-    lis = list(final_block[block].children())
-    for idx, m in final_block[block].named_children():
-        i = i + 1
-        if idx in ['_se_reduce', '_se_expand']:
-        continue
-        else:
-        if idx in ['_bn0', '_bn1', '_bn2']:
-            for param in lis[i].parameters():
-            param.requires_grad = False
-        temp.append(lis[i])
-    final_arr.append(nn.Sequential(*temp))
+        temp = []
+        i = -1
+        lis = list(final_block[block].children())
+        for idx, m in final_block[block].named_children():
+            i = i + 1
+            if idx in ['_se_reduce', '_se_expand']:
+                continue
+            else:
+                if idx not in ['_bn0', '_bn1', '_bn2']:
+                    for param in lis[i].parameters():
+                        param.requires_grad = False
+                temp.append(lis[i])
+        final_arr.append(nn.Sequential(*temp))
 
     # the efficientNet-B5 is divided into 7 big blocks 
     passing_arr = []
