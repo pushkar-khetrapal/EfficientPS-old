@@ -472,3 +472,7 @@ def TwoWayFPNBackbone():
 
     fpn = FPN( arr, paras[0], paras[1], out_channels=out_channels )
     return fpn
+
+
+
+
